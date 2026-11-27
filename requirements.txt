@@ -1,0 +1,3 @@
+# Standard library only.
+# This file is empty on purpose so a fresh install does not pull packages
+# and does not open a connection to a package index for dependencies.

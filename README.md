@@ -1,75 +1,69 @@
-# 🕷️🛡️ SPIDERSHIELD
+# SPIDERSHIELD
 
-Safe Execution System for Crew AI Agents
+Local permission checks for agent tasks.
 
-## 🎯 Overview
+The library decides whether a task sentence, a code snippet, or a source name is allowed. It keeps that decision in memory. It does not send the decision anywhere.
 
-SPIDERSHIELD is a comprehensive safety framework for autonomous AI agents. It combines Crew AI, Guardrails, and permission-based access control to ensure safe, ethical, and auditable agent execution.
+## What it does
 
-## ✨ Features
+- Allow, restrict, or block an action. A restricted action passes only for a resource you listed.
+- Scan a snippet for dangerous call shapes such as `os.system`, `eval`, and `open(..., "w")`.
+- Stop waiting on a slow call after a timeout. The caller returns. The library does not claim to kill the worker thread.
+- Record an audit list on the object that made the decision.
+- Say whether a known source name is allowed. It does not download the source.
 
-- ✅ Permission-based access control
-- ✅ Code validation & dangerous pattern detection
-- ✅ Resource limits (timeout, memory)
-- ✅ Complete audit logging
-- ✅ RAG source permissions (copyright, licensing)
-- ✅ Multi-agent orchestration
-- ✅ Enterprise-ready safety system
+## What it does not do
 
-## 🚀 Quick Start
+- It is not a firewall, an antivirus, or a sandbox.
+- It does not call an agent service.
+- It does not open a network connection.
+- It does not collect usage data.
+- It does not invent retrieved text. If you do not pass a retriever, `data` is null.
+
+## Run
+
+Python 3.10 or newer. The standard library is enough.
+
+```bash
+python example_usage.py
+```
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+`requirements.txt` is intentionally empty. This command installs nothing:
+
+```bash
+pip install -r requirements.txt
+```
+
+From this folder:
+
 ```python
 from spidershield import SafeAgentCrew
 
 crew = SafeAgentCrew()
 researcher = crew.add_agent("Researcher", "Gather data")
-
 result = researcher.execute_rag_query(
     query="Find climate data",
-    sources=["wikipedia", "public_domain"]
+    sources=["wikipedia", "public_domain"],
 )
 ```
 
-## 📁 Project Structure
+`result["results"]` lists each source with `data: null` until you pass your own `retriever(query, source)`. A restricted source is not passed to that function.
+
+## Layout
+
 ```
 spidershield/
-├── safety_guardrails.py      # Core safety system
-├── agent_executor.py          # Safe execution wrapper
-├── crew_ai_integration.py     # Crew AI with safety
-├── example_usage.py           # Examples
-├── config.py                  # Configuration
-├── __init__.py               # Package entry
-├── README.md                 # This file
-├── LICENSE                   # MIT License
-└── requirements.txt          # Dependencies
+├── safety_guardrails.py    # decisions, scan, timeout, audit
+├── agent_executor.py       # task gate, optional runner
+├── crew_ai_integration.py  # named agents and source policy
+example_usage.py
+tests/test_guard.py
 ```
 
-## 🔒 Security Features
+## License
 
-| Feature | Purpose |
-|---------|---------|
-| Permission Check | Block dangerous operations |
-| Code Validation | Detect os.system(), exec() |
-| Resource Limits | Prevent infinite loops |
-| Audit Logging | Track all actions |
-| RAG Permissions | Verify copyright/licensing |
-
-## 📦 Installation
-```bash
-pip install -r requirements.txt
-```
-
-## 📖 Documentation
-
-See [README.md](README.md) for full documentation.
-
-## 📄 License
-
-MIT License - Free for all use cases
-
-## 🤝 Contributing
-
-Pull requests welcome!
-
----
-
-**Built with ❤️ for Safe AI** 🕷️🛡️
+MIT. See `LICENSE`.

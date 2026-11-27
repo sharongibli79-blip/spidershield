@@ -1,74 +1,52 @@
+"""Run the local safety demo. Nothing in this file contacts a server."""
 
-"""
-דוגמה - Safe Crew AI with Guardrails
-"""
-
-from safety_guardrails import SafetyGuard, PermissionLevel
-from agent_executor import SafeAgentExecutor
 import json
 
-# ===== דוגמה 1: Safety Guard בסיסי =====
+from spidershield import SafeAgentCrew, SafeAgentExecutor, SafetyGuard
+
 print("=" * 50)
-print("דוגמה 1: Safety Guard")
+print("1. Safety Guard")
 print("=" * 50)
 
 guard = SafetyGuard()
+print(f"read allowed: {guard.check_permission('file_read')}")
+print(f"delete allowed: {guard.check_permission('file_delete')}")
+print(f"write with no resource: {guard.check_permission('file_write')}")
+guard.allow_resource("file_write", "notes/out.txt")
+print(f"write notes/out.txt: {guard.check_permission('file_write', 'notes/out.txt')}")
 
-# בדוק הרשאות
-print(f"✓ Read file allowed: {guard.check_permission('file_read')}")
-print(f"✗ Delete file allowed: {guard.check_permission('file_delete')}")
-print(f"✗ Download file allowed: {guard.check_permission('file_download')}")
-
-# ===== דוגמה 2: Validate Code =====
 print("\n" + "=" * 50)
-print("דוגמה 2: Code Validation")
+print("2. Code scan")
 print("=" * 50)
 
-dangerous_code = """
-import os
-os.system("rm -rf /")
-"""
+dangerous = 'import os\nos.system("rm -rf /")\n'
+safe = 'import json\ndata = json.loads(\'{"key": "value"}\')\n'
+is_safe, warnings = guard.validate_code(dangerous)
+print(f"dangerous snippet safe: {is_safe}")
+for warning in warnings:
+    print(f"  {warning}")
+is_safe, warnings = guard.validate_code(safe)
+print(f"plain snippet safe: {is_safe}")
+is_safe, warnings = guard.validate_code('open(path, "w")')
+print(f'open for write safe: {is_safe} ({len(warnings)} warning)')
 
-safe_code = """
-import json
-data = json.loads('{"key": "value"}')
-"""
-
-is_safe, warnings = guard.validate_code(dangerous_code)
-print(f"Dangerous code - Safe: {is_safe}")
-if warnings:
-    for w in warnings:
-        print(f"  ⚠️  {w}")
-
-is_safe, warnings = guard.validate_code(safe_code)
-print(f"Safe code - Safe: {is_safe}")
-
-# ===== דוגמה 3: Safe Agent Executor =====
 print("\n" + "=" * 50)
-print("דוגמה 3: Safe Agent Executor")
+print("3. Task gate")
 print("=" * 50)
 
 executor = SafeAgentExecutor()
+print(executor.execute_agent_task("read the data from file.txt"))
+print(executor.execute_agent_task("delete all files in /etc"))
 
-# מודל משימה
-task_allowed = "read the data from file.txt"
-task_denied = "delete all files in /etc"
-
-print(f"Task '{task_allowed}' - Allowed: {executor.can_execute_action('file_read')}")
-print(f"Task '{task_denied}' - Allowed: {executor.can_execute_action('file_delete')}")
-
-# ===== דוגמה 4: Safety Report =====
 print("\n" + "=" * 50)
-print("דוגמה 4: Safety Report")
+print("4. Source policy")
 print("=" * 50)
 
-# Trigger some actions
-guard.check_permission("file_read", "data.txt")
-guard.check_permission("file_delete", "important.txt")
-guard.check_permission("network_http_get", "api.example.com")
-
-report = guard.report()
-print(json.dumps(report, indent=2))
-
-print("\n✅ Safety System Ready!")
-print("SPIDERSHIELD BOOTING")
+crew = SafeAgentCrew()
+researcher = crew.add_agent("Researcher", "Gather data")
+result = researcher.execute_rag_query(
+    query="Find climate data",
+    sources=["wikipedia", "public_domain", "government", "unknown-feed"],
+)
+print(json.dumps(result, indent=2))
+print("\nSafety system ready.")

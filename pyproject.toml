@@ -1,0 +1,15 @@
+[project]
+name = "spidershield"
+version = "0.2.0"
+description = "Local permission checks for agent tasks. No network calls. No telemetry."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["spidershield*"]
